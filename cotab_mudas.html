@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Sistema de Controle de Mudas - VIVEIRO MUNÍCIPAL</title>
+
+    <link rel="stylesheet" href= "estilo/cotab.css"
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+<header>
+
+    <div class="header-content">
+
+        <div class="logo-area">
+            <h1>🌱 Sistema de Controle de Mudas</h1>
+            <p>VIVEIRO MUNÍCIPAL</p>
+        </div>
+
+        <div>
+            <h3 id="dataAtual"></h3>
+        </div>
+
+    </div>
+
+</header>
+
+<nav>
+
+    <div class="menu">
+
+        <div class="menu">
+
+    <a href= "" class="menu-link">
+        🏠 Dashboard
+    </a>
+
+    <a href="especies.html" class="menu-link">
+        🌱 Espécies
+    </a>
+
+    <a href="contagem.html" class="menu-link">
+        📋 Contagens
+    </a>
+
+    <a href="relatorio.html" class="menu-link">
+        📄 Relatórios
+    </a>
+
+</div>
+    </div>
+
+</nav>
+
+<div class="container">
+
+    <section class="dashboard">
+
+        <div class="card">
+            <h3>📊 Total de Mudas</h3>
+            <div class="numero" id="totalMudas">0</div>
+        </div>
+
+        <div class="card">
+            <h3>🌱 Espécies Cadastradas</h3>
+            <div class="numero" id="totalEspecies">0</div>
+        </div>
+
+        <div class="card">
+            <h3>📅 Última Atualização</h3>
+            <div class="numero data-card" id="ultimaAtualizacao">
+                --
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>📄 Relatórios Gerados</h3>
+            <div class="numero" id="relatorios">0</div>
+        </div>
+        <div class="card">
+
+            <h3>📸 Levantamento Mensal</h3>
+
+        <p>
+        Salva um registro histórico
+        do viveiro.
+        </p>
+        <div
+            id="mensagemDashboard"
+            class="mensagem-dashboard">
+
+        </div>
+        <div class="card-menu" id="cardHistorico">
+
+        <div class="icone">
+        📚
+        </div>
+
+        <h3>Histórico</h3>
+
+        <p>
+             Consulte levantamentos anteriores.
+        </p>
+
+    <a
+        href="historco.html"
+        class="btn-card">
+
+        Acessar
+
+    </a>
+
+</div>
+
+    <button
+        onclick="registrarLevantamento()"
+        id="btnLevantamento">
+
+        💾 Registrar Levantamento
+
+    </button>
+
+</div>
+
+    </section>
+
+    <section class="welcome">
+
+        <h2>Bem-vindo ao Sistema</h2>
+
+        <p>
+            Este sistema foi desenvolvido para auxiliar no controle
+            das mudas do viveiro municipal.
+        </p>
+
+    </section>
+
+</div>
+
+
+<footer>
+    © 2026 - Sistema de Controle de Mudas | VIVEIRO MUNÍCIPAL
+     <button
+    onclick="resetarSistema()"
+    class="btn-reset">
+
+        Limpar Dados de Teste
+
+    </button>
+</footer>
+
+<script src="cotab.js"></script>
+
+
+</body>
+</html>

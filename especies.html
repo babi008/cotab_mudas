@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Espécies - Sistema de Mudas</title>
+
+<link rel="stylesheet" href="especies.css">
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+<header>
+
+    <h1>🌱 Cadastro de Espécies</h1>
+
+    <p>Sistema de Controle de Mudas - SEMMA</p>
+
+</header>
+
+<main>
+
+    <section class="form-card">
+
+        <h2>Nova Espécie</h2>
+
+        <input
+            type="text"
+            id="nomeEspecie"
+            placeholder="Ex: Cupuaçu">
+
+        <button onclick="cadastrarEspecie()">
+            Cadastrar
+        </button>
+
+    </section>
+
+    <section class="table-card">
+
+        <h2>Espécies Cadastradas</h2>
+
+        <table>
+
+            <thead>
+
+                <tr>
+                    <th>ID</th>
+                    <th>Espécie</th>
+                    <th>Ações</th>
+                </tr>
+
+            </thead>
+
+            <tbody id="listaEspecies">
+
+            </tbody>
+
+        </table>
+
+    </section>
+    <div class="voltar-container">
+    <a href="cotab_mudas.html" class="btn-voltar">
+        ← Voltar ao Dashboard
+    </a>
+</div>
+
+</main>
+
+<script src="especies.js"></script>
+
+</body>
+
+</html>

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatórios - Viveiro SEMMA</title>
+
+    <link rel="stylesheet" href="relatorioo.css">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+</head>
+
+<body>
+
+    <header class="cabecalho-relatorio">
+
+        <div class="info-relatorio">
+
+            <h1>
+                Relatórios do Viveiro Municipal
+            </h1>
+
+            <p>
+                Sistema de Gestão de Mudas
+            </p>
+
+        </div>
+
+        <img
+            src="img/Capturar.PNG"
+            alt="SEMMA e Prefeitura"
+            class="logo-institucional">
+
+
+    </header>
+    <main>
+
+        <div class="card">
+
+            <h2>
+                Gerar Relatório
+            </h2>
+
+            <label>
+                Selecione o levantamento:
+            </label>
+
+            <select id="selectLevantamento">
+
+            </select>
+
+            <button
+            onclick="gerarPDF()">
+
+                📄 Gerar PDF
+
+            </button>
+
+        </div>
+
+        <a href="cotab_mudas.html" class="btn-voltar">
+        ← Dashboard
+        </a>
+
+    </main>
+     
+
+    <script src="relatorio.js"></script>
+
+</body>
+</html>

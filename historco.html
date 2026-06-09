@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0">
+
+<title>Histórico</title>
+
+<link rel="stylesheet"
+href="historico.css">
+
+</head>
+
+<body>
+
+<header>
+
+    <h1>📚 Histórico de Levantamentos</h1>
+
+    <a href="cotab_mudas.html"
+    class="btn-voltar">
+
+        ← Dashboard
+
+    </a>
+
+</header>
+
+<main>
+
+    <div class="card">
+
+        <h2>
+            Levantamentos Registrados
+        </h2>
+
+        <table>
+
+            <thead>
+
+                <tr>
+
+                    <th>Data</th>
+
+                    <th>Total Mudas</th>
+
+                    <th>Espécies</th>
+
+                    <th>Ações</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody id="tabelaHistorico">
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+    <div
+    id="detalhesCard"
+    class="card detalhes">
+
+        <h2>
+            Detalhes do Levantamento
+        </h2>
+
+        <div id="detalhes">
+
+            Selecione um levantamento.
+
+        </div>
+
+    </div>
+    
+
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<script src="historico.js"></script>
+<script src="historico.js"></script>
+
+</body>
+
+</html>

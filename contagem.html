@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Contagem de Mudas</title>
+
+<link rel="stylesheet" href="contagem.css">
+
+</head>
+
+<body>
+
+<header>
+
+    <h1>📋 Contagem de Mudas</h1>
+
+    <a href="cotab_mudas.html" class="btn-voltar">
+        ← Dashboard
+    </a>
+
+</header>
+
+<main>
+
+    <div class="card">
+
+        <h2>Nova Contagem</h2>
+
+        <label>Espécie</label>
+
+        <select id="especieSelect"></select>
+
+        <label>Data de Plantio</label>
+
+    <input
+        type="date"
+        id="dataPlantio">
+
+        <label>Status</label>
+
+        <select id="status">
+
+            <option>Saudável</option>
+
+            <option>Necessita irrigação</option>
+
+            <option>Em desenvolvimento</option>
+
+            <option>Pronta para doação</option>
+            
+            <option>Pronta para o plantio definitivo</option>
+
+
+        </select>
+
+        <label>Observação</label>
+
+        <textarea
+            id="observacao"
+            rows="3">
+        </textarea>
+
+        <label>Quantidade da fileira</label>
+
+        <input
+            type="number"
+            id="quantidade">
+
+        <button onclick="adicionarFileira()">
+            Adicionar Fileira
+        </button>
+
+    </div>
+
+    <div class="card">
+
+        <h2>Fileiras Registradas</h2>
+
+        <ul id="listaFileiras">
+
+        </ul>
+
+        <h3 id="total">
+            Total: 0 mudas
+        </h3>
+
+        <button onclick="salvarContagem()">
+            Salvar Contagem
+        </button>
+
+    </div>
+    <div id="mensagemSucesso" class="mensagem-sucesso">
+
+</div>
+
+</main>
+
+<script src="contagem.js"></script>
+
+</body>
+
+</html>
