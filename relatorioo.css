@@ -1,127 +1,199 @@
+:root{
+    --verde-escuro:#123524;
+    --verde:#1f6f43;
+    --verde-vivo:#3f9b5f;
+    --verde-claro:#dcefdc;
+    --terra:#8a6b3f;
+    --areia:#f3ead8;
+    --texto:#203327;
+    --cinza:#6c776f;
+    --sombra:0 14px 34px rgba(18,53,36,.18);
+}
+
 *{
     margin:0;
     padding:0;
     box-sizing:border-box;
-    font-family:Arial, sans-serif;
+    font-family:"Poppins", Arial, sans-serif;
 }
 
 body{
-
-    background:#f2f5f2;
     min-height:100vh;
-
+    color:var(--texto);
+    background:
+        radial-gradient(circle at top right, rgba(63,155,95,.35), transparent 28%),
+        radial-gradient(circle at bottom left, rgba(138,107,63,.22), transparent 30%),
+        linear-gradient(180deg, #eaf4e9, var(--areia));
 }
 
-header{
+/* CABEÇALHO */
 
-    background:#2e7d32;
-
+.cabecalho-relatorio{
+    background:
+        linear-gradient(135deg, rgba(18,53,36,.96), rgba(31,111,67,.96));
     color:white;
-
-    padding:20px 30px;
-
+    padding:28px 40px;
     display:flex;
-
     justify-content:space-between;
-
     align-items:center;
-
+    gap:25px;
+    box-shadow:0 10px 30px rgba(18,53,36,.25);
 }
 
-.logo{
-
-    width:190px;
-
-    background:white;
-
-    padding:8px;
-
-    border-radius:10px;
-
+.info-relatorio h1{
+    font-size:30px;
+    font-weight:700;
 }
 
-main{
-
-    padding:30px;
-
-}
-
-.card{
-
-    background:white;
-
-    padding:30px;
-
-    border-radius:15px;
-
-    box-shadow:0 4px 10px rgba(0,0,0,.1);
-
-    max-width:600px;
-
-    margin:auto;
-
-}
-
-.card h2{
-
-    margin-bottom:20px;
-
-    color:#2e7d32;
-
-}
-
-label{
-
-    display:block;
-
-    margin-bottom:10px;
-
-}
-
-select{
-
-    width:100%;
-
-    padding:12px;
-
-    margin-bottom:20px;
-
-    border:1px solid #ccc;
-
-    border-radius:8px;
-
-}
-
-button{
-
-    width:100%;
-
-    padding:14px;
-
-    background:#2e7d32;
-
-    color:white;
-
-    border:none;
-
-    border-radius:8px;
-
-    cursor:pointer;
-
-    font-size:16px;
-
-}
-
-button:hover{
-
-    background:#1b5e20;
-
+.info-relatorio p{
+    color:#d8ead9;
+    margin-top:6px;
+    font-weight:500;
 }
 
 .logo-institucional{
+    width:260px;
+    max-width:40%;
+    background:white;
+    padding:8px;
+    border-radius:18px;
+    box-shadow:0 8px 20px rgba(0,0,0,.15);
+}
 
-    width:280px;
+/* CONTEÚDO */
 
-    max-width:100%;
+main{
+    max-width:900px;
+    margin:38px auto;
+    padding:0 24px;
+}
 
+/* CARD */
+
+.card{
+    background:
+        linear-gradient(135deg, rgba(220,239,220,.55), rgba(255,255,255,.35));
+    backdrop-filter:blur(14px);
+    -webkit-backdrop-filter:blur(14px);
+    border:1px solid rgba(255,255,255,.35);
+    border-left:6px solid var(--verde);
+    border-radius:26px;
+    padding:30px;
+    box-shadow:var(--sombra);
+    position:relative;
+    overflow:hidden;
+}
+
+.card::after{
+    content:"";
+    position:absolute;
+    right:-45px;
+    bottom:-45px;
+    width:135px;
+    height:135px;
+    background:radial-gradient(circle, rgba(63,155,95,.25), transparent);
+    border-radius:50%;
+}
+
+.card > *{
+    position:relative;
+    z-index:1;
+}
+
+.card h2{
+    color:var(--verde-escuro);
+    font-size:24px;
+    margin-bottom:20px;
+}
+
+/* FORM */
+
+label{
+    display:block;
+    margin-bottom:8px;
+    color:var(--verde-escuro);
+    font-weight:600;
+}
+
+select{
+    width:100%;
+    padding:14px 15px;
+    border-radius:16px;
+    border:1px solid rgba(31,111,67,.2);
+    background:rgba(255,255,255,.75);
+    color:var(--texto);
+    outline:none;
+    margin-bottom:20px;
+}
+
+select:focus{
+    border-color:var(--verde);
+    box-shadow:0 0 0 4px rgba(31,111,67,.12);
+}
+
+/* BOTÕES */
+
+button,
+.btn-voltar{
+    border:none;
+    text-decoration:none;
+    display:inline-block;
+    background:linear-gradient(135deg, var(--verde), var(--verde-vivo));
+    color:white;
+    padding:13px 18px;
+    border-radius:16px;
+    font-weight:600;
+    cursor:pointer;
+    transition:.25s ease;
+    box-shadow:0 8px 18px rgba(31,111,67,.20);
+}
+
+button:hover,
+.btn-voltar:hover{
+    background:linear-gradient(135deg, var(--verde-escuro), var(--verde));
+    transform:translateY(-2px);
+}
+
+.card button{
+    width:100%;
+}
+
+.btn-voltar{
+    margin-top:22px;
+}
+
+/* RESPONSIVO */
+
+@media(max-width:768px){
+
+    .cabecalho-relatorio{
+        flex-direction:column;
+        align-items:flex-start;
+        padding:26px 18px;
+    }
+
+    .info-relatorio h1{
+        font-size:24px;
+    }
+
+    .logo-institucional{
+        width:100%;
+        max-width:320px;
+    }
+
+    main{
+        margin:24px auto;
+        padding:0 16px;
+    }
+
+    .card{
+        padding:22px;
+        border-radius:22px;
+    }
+
+    button,
+    .btn-voltar{
+        width:100%;
+        text-align:center;
+    }
 }

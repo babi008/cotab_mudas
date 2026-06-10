@@ -22,20 +22,34 @@ document.getElementById(
 especies.length;
 
 const contagens =
-JSON.parse(
-    localStorage.getItem("contagens")
-) || [];
+JSON.parse(localStorage.getItem("contagens")) || [];
 
-let totalMudas = 0;
+const saidas =
+JSON.parse(localStorage.getItem("saidas")) || [];
+
+let totalContado = 0;
 
 contagens.forEach(contagem => {
-
-    totalMudas += contagem.total;
-
+    totalContado += Number(contagem.total);
 });
-document.getElementById(
-    "totalMudas"
-).innerHTML = totalMudas;
+
+let totalSaidas = 0;
+
+saidas.forEach(saida => {
+    totalSaidas += Number(saida.quantidade);
+});
+
+const totalAtual =
+totalContado - totalSaidas;
+
+document.getElementById("totalMudas").innerHTML =
+totalAtual;
+const relatorioGerados =
+Number(localStorage.getItem("relatorioGerados")) || 0;
+
+document.getElementById("relatorio").innerHTML =
+relatorioGerados; 
+
 if(contagens.length > 0){
 
     const ultimaContagem =

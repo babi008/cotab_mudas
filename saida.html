@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Saída de Mudas</title>
+
+    <link rel="stylesheet" href="saida.css">
+</head>
+<body>
+
+<header>
+    <h1>📤 Controle de Saída de Mudas</h1>
+
+    <a href="cotab_mudas.html" class="btn-voltar">
+        ← Dashboard
+    </a>
+</header>
+
+<main>
+
+    <section class="card">
+        <h2>Registrar Saída</h2>
+
+        <label>Espécie</label>
+        <select id="especieSelect"></select>
+
+        <label>Quantidade</label>
+        <input type="number" id="quantidadeSaida" placeholder="Ex: 20">
+
+        <label>Motivo da saída</label>
+        <select id="motivoSaida">
+            <option value="Doação">Doação</option>
+            <option value="Plantio">Plantio</option>
+            <option value="Perda">Perda</option>
+            <option value="Outro">Outro</option>
+        </select>
+
+        <label>Destino</label>
+        <input type="text" id="destinoSaida" placeholder="Ex: Escola Municipal, praça, comunidade">
+
+        <label>Observação</label>
+        <textarea id="observacaoSaida" rows="3" placeholder="Informações adicionais"></textarea>
+
+        <button onclick="registrarSaida()">
+            Registrar Saída
+        </button>
+    </section>
+
+    <section class="card">
+        <h2>Saídas Registradas</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Espécie</th>
+                    <th>Qtd.</th>
+                    <th>Motivo</th>
+                    <th>Destino</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+
+            <tbody id="listaSaidas"></tbody>
+        </table>
+    </section>
+
+</main>
+
+<script src="saida.js"></script>
+
+</body>
+</html>
