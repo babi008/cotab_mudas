@@ -1,0 +1,22 @@
+{
+  "name": "Sistema de Controle de Mudas",
+  "short_name": "Cotab Mudas",
+  "description": "Sistema de gestão do Viveiro Municipal da SEMMA",
+  "start_url": "cotab_mudas.html",
+  "display": "standalone",
+  "background_color": "#eaf4e9",
+  "theme_color": "#123524",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "img/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "img/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
