@@ -4,9 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Sistema de Controle de Mudas - VIVEIRO MUNÍCIPAL</title>
+    <title>Sistema de Controle de Mudas - VIVEIRO MUNICIPAL</title>
 
-    <link rel="stylesheet" href= "estilo/cotab.css">
+    <link rel="stylesheet" href="estilo/cotab.css">
+
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#123524">
 
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
@@ -14,8 +17,6 @@
 <body>
 
 <header>
-    <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#123524">
 
     <div class="header-content">
 
@@ -158,10 +159,15 @@
 
 <script type="module" src="./cotab.js"></script>
 <script>
-if("serviceWorker" in navigator){
-    navigator.serviceWorker.register("service-worker.js");
-}
+window.addEventListener("load", () => {
+    if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("/service-worker.js")
+        .then(() => console.log("Service Worker registrado"))
+        .catch(error => console.error("Erro no Service Worker:", error));
+    }
+});
 </script>
 
+</script>
 </body>
 </html>

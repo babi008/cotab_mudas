@@ -1,27 +1,36 @@
-const CACHE_NAME = "cotab-mudas-v1";
+const CACHE_NAME = "cotab-mudas-v4";
 
 const FILES_TO_CACHE = [
     "./",
     "./cotab_mudas.html",
-    "./cotab.js",
+
+    "./manifest.json",
+
     "./firebase.js",
-    "./estilo/cotab.css",
-    "./especies.html",
-    "./especies.js",
-    "./especies.css",
-    "./contagem.html",
+
+    "./cotab.js",
     "./contagem.js",
-    "./contagem.css",
-    "./saida.html",
+    "./especies.js",
     "./saida.js",
-    "./saida.css",
-    "./historco.html",
     "./historico.js",
-    "./historico.css",
-    "./relatorio.html",
     "./relatorio.js",
+
+    "./estilo/cotab.css",
+    "./contagem.css",
+    "./especies.css",
+    "./saida.css",
+    "./historico.css",
     "./relatorioo.css",
-    "./manifest.json"
+
+    "./contagem.html",
+    "./especies.html",
+    "./saida.html",
+    "./historco.html",
+    "./relatorio.html",
+
+    "./img/icon-192.png",
+    "./img/icon-512.png",
+    "./img/Capturar.PNG"
 ];
 
 self.addEventListener("install", event => {
@@ -29,11 +38,31 @@ self.addEventListener("install", event => {
         caches.open(CACHE_NAME)
         .then(cache => cache.addAll(FILES_TO_CACHE))
     );
+
+    self.skipWaiting();
+});
+
+self.addEventListener("activate", event => {
+    event.waitUntil(
+        caches.keys().then(keys => {
+            return Promise.all(
+                keys.map(key => {
+                    if(key !== CACHE_NAME){
+                        return caches.delete(key);
+                    }
+                })
+            );
+        })
+    );
+
+    self.clients.claim();
 });
 
 self.addEventListener("fetch", event => {
     event.respondWith(
         caches.match(event.request)
-        .then(response => response || fetch(event.request))
+        .then(response => {
+            return response || fetch(event.request);
+        })
     );
 });
