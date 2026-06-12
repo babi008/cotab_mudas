@@ -1,4 +1,4 @@
-const CACHE_NAME = "cotab-mudas-v4";
+const CACHE_NAME = "cotab-mudas-v5";
 
 const FILES_TO_CACHE = [
     "./",
@@ -60,9 +60,21 @@ self.addEventListener("activate", event => {
 
 self.addEventListener("fetch", event => {
     event.respondWith(
-        caches.match(event.request)
+        fetch(event.request)
         .then(response => {
-            return response || fetch(event.request);
+            const copia = response.clone();
+
+            caches.open(CACHE_NAME).then(cache => {
+                cache.put(event.request, copia);
+            });
+
+            return response;
+        })
+        .catch(() => {
+            return caches.match(event.request)
+            .then(response => {
+                return response || caches.match("./cotab_mudas.html");
+            });
         })
     );
 });
