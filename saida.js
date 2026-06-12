@@ -1,29 +1,66 @@
-let saidas =
-JSON.parse(localStorage.getItem("saidas")) || [];
+import { db } from "./firebase.js";
 
-const especies =
-JSON.parse(localStorage.getItem("especies")) || [];
+import {
+    collection,
+    addDoc,
+    getDocs,
+    deleteDoc,
+    doc
+} from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
 
-function carregarEspecies(){
+const colecaoEspecies =
+collection(db, "especies");
+
+const colecaoSaidas =
+collection(db, "saidas");
+
+/*
+=========================
+CARREGAR ESPÉCIES
+=========================
+*/
+
+async function carregarEspecies(){
 
     const select =
     document.getElementById("especieSelect");
 
     select.innerHTML = "";
 
-    especies.forEach(especie => {
+    const snapshot =
+    await getDocs(colecaoEspecies);
+
+    if(snapshot.empty){
+
+        select.innerHTML = `
+            <option>
+                Nenhuma espécie cadastrada
+            </option>
+        `;
+
+        return;
+    }
+
+    snapshot.forEach(documento => {
+
+        const especie =
+        documento.data();
 
         select.innerHTML += `
             <option value="${especie.nome}">
                 ${especie.nome}
             </option>
         `;
-
     });
-
 }
 
-function registrarSaida(){
+/*
+=========================
+REGISTRAR SAÍDA NO FIREBASE
+=========================
+*/
+
+window.registrarSaida = async function(){
 
     const especie =
     document.getElementById("especieSelect").value;
@@ -40,39 +77,43 @@ function registrarSaida(){
     const observacao =
     document.getElementById("observacaoSaida").value.trim();
 
-    if(!especie){
-        alert("Selecione uma espécie.");
+    if(!especie || especie === "Nenhuma espécie cadastrada"){
+
+        alert("Selecione uma espécie válida.");
         return;
     }
 
     if(quantidade <= 0){
+
         alert("Informe uma quantidade válida.");
         return;
     }
 
-    const hoje = new Date();
+    const hoje =
+    new Date();
 
-saidas.push({
-    especie,
-    quantidade,
-    motivo,
-    destino,
-    observacao,
+    await addDoc(colecaoSaidas, {
 
-    data:
-    hoje.toLocaleDateString(
-        "pt-BR"
-    ),
+        especie,
 
-    dataISO:
-    hoje.toISOString()
+        quantidade,
 
-});
+        motivo,
 
-    localStorage.setItem(
-        "saidas",
-        JSON.stringify(saidas)
-    );
+        destino,
+
+        observacao,
+
+        data:
+        hoje.toLocaleDateString("pt-BR"),
+
+        dataISO:
+        hoje.toISOString(),
+
+        criadoEm:
+        hoje.toISOString()
+
+    });
 
     alert("Saída registrada com sucesso!");
 
@@ -81,16 +122,25 @@ saidas.push({
     document.getElementById("observacaoSaida").value = "";
 
     carregarSaidas();
-}
+};
 
-function carregarSaidas(){
+/*
+=========================
+CARREGAR SAÍDAS
+=========================
+*/
+
+async function carregarSaidas(){
 
     const lista =
     document.getElementById("listaSaidas");
 
     lista.innerHTML = "";
 
-    if(saidas.length === 0){
+    const snapshot =
+    await getDocs(colecaoSaidas);
+
+    if(snapshot.empty){
 
         lista.innerHTML = `
             <tr>
@@ -103,7 +153,10 @@ function carregarSaidas(){
         return;
     }
 
-    saidas.forEach((saida,index) => {
+    snapshot.forEach(documento => {
+
+        const saida =
+        documento.data();
 
         lista.innerHTML += `
             <tr>
@@ -115,61 +168,40 @@ function carregarSaidas(){
                 <td>
                     <button
                         class="btn-excluir"
-                        onclick="excluirSaida(${index})">
+                        onclick="excluirSaida('${documento.id}')">
                         Excluir
                     </button>
                 </td>
             </tr>
         `;
-
     });
-
 }
 
-function excluirSaida(index){
+/*
+=========================
+EXCLUIR SAÍDA
+=========================
+*/
+
+window.excluirSaida = async function(id){
 
     const confirmar =
     confirm("Deseja excluir esta saída?");
 
     if(!confirmar) return;
 
-    saidas.splice(index,1);
-
-    localStorage.setItem(
-        "saidas",
-        JSON.stringify(saidas)
+    await deleteDoc(
+        doc(db, "saidas", id)
     );
 
-    const hoje = new Date();
-
-saida.push({
-
-    especie,
-
-    quantidade,
-
-    motivo,
-
-    destino,
-
-    observacao,
-
-    data:
-    hoje.toLocaleDateString(
-        "pt-BR"
-    ),
-
-    dataISO:
-    hoje.toISOString()
-
-});
-localStorage.setItem(
-    "saida",
-    JSON.stringify(saida)
-);
-
     carregarSaidas();
-}
+};
+
+/*
+=========================
+INICIAR
+=========================
+*/
 
 carregarEspecies();
 carregarSaidas();

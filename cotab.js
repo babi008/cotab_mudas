@@ -1,3 +1,13 @@
+import { db } from "./firebase.js";
+
+import {
+    collection,
+    getDocs,
+    addDoc,
+    updateDoc,
+    doc
+} from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+
 const hoje = new Date();
 
 document.getElementById("dataAtual").innerHTML =
@@ -7,73 +17,125 @@ document.getElementById("ultimaAtualizacao").innerHTML =
     hoje.toLocaleDateString("pt-BR");
 
 /*
-Dados temporários.
-Depois serão substituídos pelo Firebase.
+=========================
+CARREGAR DASHBOARD
+=========================
 */
 
-const especies =
-JSON.parse(
-    localStorage.getItem("especies")
-) || [];
+async function carregarDashboard(){
 
-document.getElementById(
-    "totalEspecies"
-).innerHTML =
-especies.length;
+    // ESPÉCIES
+    const especiesSnapshot =
+    await getDocs(
+        collection(db, "especies")
+    );
 
-const contagens =
-JSON.parse(localStorage.getItem("contagens")) || [];
+    document.getElementById("totalEspecies").innerHTML =
+    especiesSnapshot.size;
 
-const saidas =
-JSON.parse(localStorage.getItem("saidas")) || [];
+    // CONTAGENS
+    const contagensSnapshot =
+    await getDocs(
+        collection(db, "contagens")
+    );
 
-let totalContado = 0;
+    let contagens = [];
 
-contagens.forEach(contagem => {
-    totalContado += Number(contagem.total);
-});
+    let totalContado = 0;
 
-let totalSaidas = 0;
+    let ultimaData = "";
 
-saidas.forEach(saida => {
-    totalSaidas += Number(saida.quantidade);
-});
+    contagensSnapshot.forEach(documento => {
 
-const totalAtual =
-totalContado - totalSaidas;
+        const contagem =
+        documento.data();
 
-document.getElementById("totalMudas").innerHTML =
-totalAtual;
-const relatorioGerados =
-Number(localStorage.getItem("relatorioGerados")) || 0;
+        contagens.push({
+            id: documento.id,
+            ...contagem
+        });
 
-document.getElementById("relatorio").innerHTML =
-relatorioGerados; 
+        totalContado +=
+        Number(contagem.total);
 
-if(contagens.length > 0){
+        ultimaData =
+        contagem.data || ultimaData;
 
-    const ultimaContagem =
-    contagens[
-        contagens.length - 1
-    ];
+    });
 
-    document.getElementById(
-        "ultimaAtualizacao"
-    ).innerHTML =
-    ultimaContagem.data;
+    // SAÍDAS
+    const saidasSnapshot =
+    await getDocs(
+        collection(db, "saidas")
+    );
 
+    let totalSaidas = 0;
+
+    saidasSnapshot.forEach(documento => {
+
+        const saida =
+        documento.data();
+
+        totalSaidas +=
+        Number(saida.quantidade);
+
+    });
+
+    const totalAtual =
+    totalContado - totalSaidas;
+
+    document.getElementById("totalMudas").innerHTML =
+    totalAtual;
+
+    if(ultimaData){
+
+        document.getElementById("ultimaAtualizacao").innerHTML =
+        ultimaData;
+
+    }
+
+    // RELATÓRIOS GERADOS
+    const relatoriosSnapshot =
+    await getDocs(
+        collection(db, "relatoriosGerados")
+    );
+
+    document.getElementById("relatorio").innerHTML =
+    relatoriosSnapshot.size;
 }
-function registrarLevantamento(){
 
-    const contagens =
-    JSON.parse(
-        localStorage.getItem("contagens")
-    ) || [];
+/*
+=========================
+REGISTRAR LEVANTAMENTO
+NO FIREBASE
+=========================
+*/
 
-    const especies =
-    JSON.parse(
-        localStorage.getItem("especies")
-    ) || [];
+window.registrarLevantamento = async function(){
+
+    const contagensSnapshot =
+    await getDocs(
+        collection(db, "contagens")
+    );
+
+    let contagens = [];
+
+    let totalMudas = 0;
+
+    contagensSnapshot.forEach(documento => {
+
+        const contagem =
+        documento.data();
+
+        contagens.push({
+            id: documento.id,
+            ...contagem
+        });
+
+        totalMudas +=
+        Number(contagem.total);
+
+    });
 
     if(contagens.length === 0){
 
@@ -84,14 +146,16 @@ function registrarLevantamento(){
         return;
     }
 
-    const historico =
-    JSON.parse(
-        localStorage.getItem(
-            "historicoDashboard"
-        )
-    ) || [];
+    const especiesSnapshot =
+    await getDocs(
+        collection(db, "especies")
+    );
 
-    const hoje = new Date();
+    const totalEspecies =
+    especiesSnapshot.size;
+
+    const hoje =
+    new Date();
 
     const mesAtual =
     hoje.getMonth();
@@ -99,83 +163,98 @@ function registrarLevantamento(){
     const anoAtual =
     hoje.getFullYear();
 
-   const indiceExistente =
-historico.findIndex(item => {
-
-    const data =
-    new Date(item.dataRegistroISO);
-
-    return (
-        data.getMonth() === mesAtual &&
-        data.getFullYear() === anoAtual
+    const historicoSnapshot =
+    await getDocs(
+        collection(db, "historicoDashboard")
     );
 
-});
+    let levantamentoExistente = null;
 
-    let totalMudas = 0;
+    historicoSnapshot.forEach(documento => {
 
-    contagens.forEach(contagem => {
+        const item =
+        documento.data();
 
-        totalMudas += contagem.total;
+        if(item.dataRegistroISO){
+
+            const data =
+            new Date(item.dataRegistroISO);
+
+            if(
+                data.getMonth() === mesAtual &&
+                data.getFullYear() === anoAtual
+            ){
+                levantamentoExistente = {
+                    id: documento.id,
+                    ...item
+                };
+            }
+
+        }
 
     });
 
     const levantamento = {
 
-    dataAtualizacao:
-    hoje.toLocaleDateString(
-        "pt-BR"
-    ),
+        dataAtualizacao:
+        hoje.toLocaleDateString(
+            "pt-BR"
+        ),
 
-    dataRegistroISO:
-    hoje.toISOString(),
+        dataRegistroISO:
+        hoje.toISOString(),
 
-    totalMudas,
+        totalMudas,
 
-    totalEspecies:
-    especies.length,
+        totalEspecies,
 
-    especies:
-    [...contagens]
+        especies:
+        [...contagens]
 
-};
-    if(indiceExistente !== -1){
+    };
 
-    historico[indiceExistente] =
-    levantamento;
+    if(levantamentoExistente){
 
-    alert(
-        "Levantamento deste mês atualizado com sucesso!"
-    );
+        await updateDoc(
+            doc(
+                db,
+                "historicoDashboard",
+                levantamentoExistente.id
+            ),
+            levantamento
+        );
 
-}else{
+        alert(
+            "Levantamento deste mês atualizado com sucesso!"
+        );
 
-    historico.push(
-        levantamento
-    );
+    }else{
 
-    alert(
-        "Novo levantamento registrado!"
-    );
+        await addDoc(
+            collection(db, "historicoDashboard"),
+            levantamento
+        );
 
-}
+        alert(
+            "Novo levantamento registrado!"
+        );
 
-    localStorage.setItem(
-
-        "historicoDashboard",
-
-        JSON.stringify(
-            historico
-        )
-
-    );
+    }
 
     mostrarSucessoLevantamento(
         totalMudas,
-        especies.length
+        totalEspecies
     );
 
-}
+    carregarDashboard();
+
+};
+
+/*
+=========================
+MENSAGEM
+=========================
+*/
 
 function mostrarSucessoLevantamento(
     totalMudas,
@@ -188,23 +267,18 @@ function mostrarSucessoLevantamento(
     );
 
     div.innerHTML = `
-
         <h3>
             ✅ Levantamento Registrado
         </h3>
 
         <p>
             Total de mudas:
-            <strong>
-                ${totalMudas}
-            </strong>
+            <strong>${totalMudas}</strong>
         </p>
 
         <p>
             Total de espécies:
-            <strong>
-                ${totalEspecies}
-            </strong>
+            <strong>${totalEspecies}</strong>
         </p>
 
         <p>
@@ -218,17 +292,23 @@ function mostrarSucessoLevantamento(
                 }
             </strong>
         </p>
-
     `;
 
     div.style.display =
     "block";
 
 }
-function resetarSistema(){
+
+/*
+=========================
+RESET LOCAL
+=========================
+*/
+
+window.resetarSistema = function(){
 
     const confirmar = confirm(
-        "Deseja apagar todos os dados de teste?"
+        "Isso apaga apenas dados locais do navegador. Os dados do Firebase continuam salvos. Deseja continuar?"
     );
 
     if(!confirmar){
@@ -238,9 +318,17 @@ function resetarSistema(){
     localStorage.clear();
 
     alert(
-        "Dados apagados com sucesso!"
+        "Dados locais apagados com sucesso!"
     );
 
     location.reload();
 
-}
+};
+
+/*
+=========================
+INICIAR
+=========================
+*/
+
+carregarDashboard();

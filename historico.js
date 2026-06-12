@@ -1,28 +1,56 @@
+import { db } from "./firebase.js";
+
+import {
+    collection,
+    getDocs,
+    deleteDoc,
+    doc
+} from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+
 function formatarDataBR(dataISO){
 
     if(!dataISO){
         return "Não informado";
     }
 
-    const partes = dataISO.split("-");
+    const partes =
+    dataISO.split("-");
 
     return `${partes[2]}/${partes[1]}/${partes[0]}`;
 }
-const historico =
-JSON.parse(
-    localStorage.getItem(
-        "historicoDashboard"
-    )
-) || [];
 
 const tabela =
 document.getElementById(
     "tabelaHistorico"
 );
 
-function carregarHistorico(){
+let historico = [];
+
+/*
+=========================
+CARREGAR HISTÓRICO
+=========================
+*/
+
+async function carregarHistorico(){
 
     tabela.innerHTML = "";
+
+    const snapshot =
+    await getDocs(
+        collection(db, "historicoDashboard")
+    );
+
+    historico = [];
+
+    snapshot.forEach(documento => {
+
+        historico.push({
+            id: documento.id,
+            ...documento.data()
+        });
+
+    });
 
     if(historico.length === 0){
 
@@ -37,54 +65,41 @@ function carregarHistorico(){
         return;
     }
 
-    historico.forEach(
-    (registro,index)=>{
+    historico.forEach((registro,index)=>{
 
         tabela.innerHTML += `
+            <tr>
+                <td>${registro.dataAtualizacao}</td>
 
-        <tr>
+                <td>${registro.totalMudas}</td>
 
-            <td>
-                ${registro.dataAtualizacao}
-            </td>
+                <td>${registro.totalEspecies}</td>
 
-            <td>
-                ${registro.totalMudas}
-            </td>
+                <td>
+                    <button onclick="verDetalhes(${index})">
+                        Ver
+                    </button>
 
-            <td>
-                ${registro.totalEspecies}
-            </td>
-
-        <td>
-
-            <button
-                onclick="verDetalhes(${index})">
-
-                    Ver
-
-            </button>
-
-
-        <button
-        onclick="excluirLevantamento(${index})"
-        class="btn-excluir">
-
-                    Excluir
-
-        </button>
-
-    </td>
-
-        </tr>
-
+                    <button
+                        onclick="excluirLevantamento('${registro.id}')"
+                        class="btn-excluir">
+                        Excluir
+                    </button>
+                </td>
+            </tr>
         `;
 
     });
 
 }
 
-function verDetalhes(index){
+/*
+=========================
+VER DETALHES
+=========================
+*/
+
+window.verDetalhes = function(index){
 
     const registro =
     historico[index];
@@ -113,73 +128,81 @@ function verDetalhes(index){
     registro.especies.forEach(item => {
 
         const nome =
-            item.especie ||
-            item.nome ||
-            "Espécie não informada";
+        item.especie ||
+        item.nome ||
+        "Espécie não informada";
 
         const quantidade =
-            item.total ||
-            item.quantidade ||
-            0;
+        item.total ||
+        item.quantidade ||
+        0;
 
         const plantio =
-        formatarDataBR(item.dataPlantio);
+        formatarDataBR(
+            item.dataPlantio
+        );
 
         const status =
-            item.status ||
-            "-";
+        item.status ||
+        "-";
 
         const observacao =
-            item.observacao ||
-            "-";
+        item.observacao ||
+        "-";
 
         html += `
+            <div
+            style="
+                margin-bottom:15px;
+                padding:15px;
+                border-left:4px solid #2e7d32;
+                background:#f8f8f8;
+                border-radius:5px;
+            ">
 
-        <div
-        style="
-            margin-bottom:15px;
-            padding:15px;
-            border-left:4px solid #2e7d32;
-            background:#f8f8f8;
-            border-radius:5px;
-        ">
+                <strong>
+                    🌱 ${nome}
+                </strong>
 
-            <strong>
-                🌱 ${nome}
-            </strong>
+                <br><br>
 
-            <br><br>
+                <strong>Quantidade:</strong>
+                ${quantidade}
 
-            <strong>Quantidade:</strong>
-            ${quantidade}
+                <br>
 
-            <br>
+                <strong>Plantio:</strong>
+                ${plantio}
 
-            <strong>Plantio:</strong>
-            ${plantio}
+                <br>
 
-            <br>
+                <strong>Status:</strong>
+                ${status}
 
-            <strong>Status:</strong>
-            ${status}
+                <br>
 
-            <br>
+                <strong>Observação:</strong>
+                ${observacao}
 
-            <strong>Observação:</strong>
-            ${observacao}
-
-        </div>
-
+            </div>
         `;
 
     });
 
     detalhes.innerHTML = html;
 
-}
-function excluirLevantamento(index){
+};
 
-    const confirmar = confirm(
+/*
+=========================
+EXCLUIR LEVANTAMENTO
+=========================
+*/
+
+window.excluirLevantamento = async function(id){
+
+    const confirmar =
+    confirm(
         "Deseja realmente excluir este levantamento?"
     );
 
@@ -187,11 +210,8 @@ function excluirLevantamento(index){
         return;
     }
 
-    historico.splice(index, 1);
-
-    localStorage.setItem(
-        "historicoDashboard",
-        JSON.stringify(historico)
+    await deleteDoc(
+        doc(db, "historicoDashboard", id)
     );
 
     document.getElementById(
@@ -199,13 +219,18 @@ function excluirLevantamento(index){
     ).innerHTML =
     "Selecione um levantamento.";
 
-    carregarHistorico();
+    await carregarHistorico();
 
     alert(
         "Levantamento excluído com sucesso!"
     );
 
-}
+};
 
+/*
+=========================
+INICIAR
+=========================
+*/
 
 carregarHistorico();

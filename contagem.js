@@ -1,83 +1,106 @@
+import { db } from "./firebase.js";
+
+import {
+    collection,
+    addDoc,
+    getDocs
+} from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+
 let fileiras = [];
 
-let contagens =
-JSON.parse(
-localStorage.getItem("contagens")
-) || [];
+const colecaoEspecies =
+collection(db, "especies");
 
-const especies =
-JSON.parse(
-localStorage.getItem("especies")
-) || [];
+const colecaoContagens =
+collection(db, "contagens");
 
-function carregarEspecies(){
+/*
+=========================
+CARREGAR ESPÉCIES
+=========================
+*/
+
+async function carregarEspecies(){
 
     const select =
-    document.getElementById(
-        "especieSelect"
-    );
+    document.getElementById("especieSelect");
 
-    especies.forEach(especie=>{
+    select.innerHTML = "";
 
-        select.innerHTML += `
+    const snapshot =
+    await getDocs(colecaoEspecies);
+
+    if(snapshot.empty){
+
+        select.innerHTML = `
             <option>
-                ${especie.nome}
+                Nenhuma espécie cadastrada
             </option>
         `;
 
-    });
+        return;
+    }
 
+    snapshot.forEach(documento => {
+
+        const especie =
+        documento.data();
+
+        select.innerHTML += `
+            <option value="${especie.nome}">
+                ${especie.nome}
+            </option>
+        `;
+    });
 }
 
-function adicionarFileira(){
+/*
+=========================
+ADICIONAR FILEIRA
+=========================
+*/
+
+window.adicionarFileira = function(){
 
     const quantidade =
     Number(
-        document.getElementById(
-            "quantidade"
-        ).value
+        document.getElementById("quantidade").value
     );
 
-    if(!quantidade){
+    if(!quantidade || quantidade <= 0){
 
-        alert(
-            "Informe uma quantidade."
-        );
-
+        alert("Informe uma quantidade válida.");
         return;
-
     }
 
     fileiras.push(quantidade);
 
     atualizarLista();
 
-    document.getElementById(
-        "quantidade"
-    ).value = "";
+    document.getElementById("quantidade").value = "";
+};
 
-}
+/*
+=========================
+ATUALIZAR LISTA
+=========================
+*/
 
 function atualizarLista(){
 
     const lista =
-    document.getElementById(
-        "listaFileiras"
-    );
+    document.getElementById("listaFileiras");
 
     lista.innerHTML = "";
 
     let total = 0;
 
-    fileiras.forEach(
-        (valor,index)=>{
+    fileiras.forEach((valor,index)=>{
 
         total += valor;
 
         lista.innerHTML += `
-
             <li>
-
                 <span>
                     ✓ Fileira ${index + 1}
                     - ${valor} mudas
@@ -86,74 +109,73 @@ function atualizarLista(){
                 <button
                     class="btn-remover"
                     onclick="removerFileira(${index})">
-
                     🗑️
-
                 </button>
-
             </li>
-
         `;
-
     });
-    
 
-    document.getElementById(
-        "total"
-    ).innerHTML =
+    document.getElementById("total").innerHTML =
     `Total: ${total} mudas`;
-
-
-
-    document.getElementById(
-        "total"
-    ).innerHTML =
-    `Total: ${total} mudas`;
-
 }
 
-function salvarContagem(){
+/*
+=========================
+REMOVER FILEIRA
+=========================
+*/
+
+window.removerFileira = function(index){
+
+    const confirmar =
+    confirm("Deseja remover esta fileira?");
+
+    if(!confirmar) return;
+
+    fileiras.splice(index,1);
+
+    atualizarLista();
+};
+
+/*
+=========================
+SALVAR CONTAGEM NO FIREBASE
+=========================
+*/
+
+window.salvarContagem = async function(){
 
     if(fileiras.length === 0){
 
-        alert(
-            "Adicione pelo menos uma fileira."
-        );
-
+        alert("Adicione pelo menos uma fileira.");
         return;
-
     }
 
     const especie =
-    document.getElementById(
-        "especieSelect"
-    ).value;
+    document.getElementById("especieSelect").value;
+
+    if(!especie || especie === "Nenhuma espécie cadastrada"){
+
+        alert("Cadastre uma espécie antes de salvar a contagem.");
+        return;
+    }
 
     const dataPlantio =
-    document.getElementById(
-        "dataPlantio"
-    ).value;
-    
-    console.log("Data Plantio:", dataPlantio);
-
+    document.getElementById("dataPlantio").value;
 
     const status =
-    document.getElementById(
-        "status"
-    ).value;
+    document.getElementById("status").value;
 
     const observacao =
-    document.getElementById(
-        "observacao"
-    ).value;
+    document.getElementById("observacao").value.trim();
 
     const total =
-    fileiras.reduce(
-        (a,b)=>a+b,
-        0
-    );
-    
-    contagens.push({
+    fileiras.reduce((a,b)=>a+b,0);
+
+    const hoje =
+    new Date();
+
+    await addDoc(colecaoContagens, {
 
         especie,
 
@@ -163,22 +185,20 @@ function salvarContagem(){
 
         observacao,
 
-        fileiras: [...fileiras],
+        fileiras:[...fileiras],
 
         total,
 
         data:
-        new Date()
-        .toLocaleDateString(
-            "pt-BR"
-        )
+        hoje.toLocaleDateString("pt-BR"),
+
+        dataISO:
+        hoje.toISOString(),
+
+        criadoEm:
+        hoje.toISOString()
 
     });
-
-    localStorage.setItem(
-        "contagens",
-        JSON.stringify(contagens)
-    );
 
     mostrarMensagemSucesso(
         especie,
@@ -189,50 +209,26 @@ function salvarContagem(){
 
     atualizarLista();
 
-    document.getElementById(
-        "observacao"
-    ).value = "";
+    document.getElementById("observacao").value = "";
+    document.getElementById("dataPlantio").value = "";
+};
 
-    document.getElementById(
-        "dataPlantio"
-    ).value = "";
+/*
+=========================
+MENSAGEM DE SUCESSO
+=========================
+*/
 
-}
-function removerFileira(index){
-
-    const confirmar =
-    confirm(
-        "Deseja remover esta fileira?"
-    );
-
-    if(!confirmar) return;
-
-    fileiras.splice(index,1);
-
-    atualizarLista();
-
-}
-function mostrarMensagemSucesso(
-    especie,
-    total
-){
+function mostrarMensagemSucesso(especie,total){
 
     const caixa =
-    document.getElementById(
-        "mensagemSucesso"
-    );
+    document.getElementById("mensagemSucesso");
 
     const dataAtual =
-    new Date()
-    .toLocaleDateString(
-        "pt-BR"
-    );
+    new Date().toLocaleDateString("pt-BR");
 
     caixa.innerHTML = `
-
-        <h3>
-            ✅ Contagem salva com sucesso!
-        </h3>
+        <h3>✅ Contagem salva com sucesso!</h3>
 
         <br>
 
@@ -250,94 +246,19 @@ function mostrarMensagemSucesso(
             <strong>Data:</strong>
             ${dataAtual}
         </p>
-
     `;
 
-    caixa.style.display =
-    "block";
+    caixa.style.display = "block";
 
     setTimeout(()=>{
-
-        caixa.style.display =
-        "none";
-
+        caixa.style.display = "none";
     },5000);
-
 }
-function atualizarDashboard(){
 
-    const contagens =
-    JSON.parse(
-        localStorage.getItem(
-            "contagens"
-        )
-    ) || [];
-
-    const especies =
-    JSON.parse(
-        localStorage.getItem(
-            "especies"
-        )
-    ) || [];
-
-    let totalMudas = 0;
-
-    contagens.forEach(c=>{
-
-        totalMudas += c.total;
-
-    });
-
-    const historico =
-    JSON.parse(
-        localStorage.getItem(
-            "historicoDashboard"
-        )
-    ) || [];
-
-    historico.push({
-
-        dataAtualizacao:
-        new Date()
-        .toLocaleDateString(
-            "pt-BR"
-        ),
-
-        totalMudas,
-
-        totalEspecies:
-        especies.length,
-
-        especies:
-        contagens.map(c=>({
-
-            nome:
-            c.especie,
-
-            quantidade:
-            c.total,
-
-            dataPlantio:
-            c.dataPlantio
-
-        }))
-
-    });
-
-    localStorage.setItem(
-
-        "historicoDashboard",
-
-        JSON.stringify(
-            historico
-        )
-
-    );
-
-    alert(
-        "Dashboard atualizado!"
-    );
-
-}
+/*
+=========================
+INICIAR
+=========================
+*/
 
 carregarEspecies();

@@ -1,23 +1,15 @@
+import { db } from "./firebase.js";
 
-let especies =
-JSON.parse(
-localStorage.getItem("especies")
-) || [];
+import {
+    collection,
+    addDoc,
+    getDocs,
+    deleteDoc,
+    updateDoc,
+    doc
+} from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
 
-/*
-=========================
-SALVAR
-=========================
-*/
-
-function salvarDados(){
-
-    localStorage.setItem(
-        "especies",
-        JSON.stringify(especies)
-    );
-
-}
+const colecaoEspecies = collection(db, "especies");
 
 /*
 =========================
@@ -25,25 +17,21 @@ CADASTRAR
 =========================
 */
 
-function cadastrarEspecie(){
+window.cadastrarEspecie = async function(){
 
     const campo =
-    document.getElementById(
-        "nomeEspecie"
-    );
+    document.getElementById("nomeEspecie");
 
     const nome =
     campo.value.trim();
 
     if(nome === ""){
-
-        alert(
-            "Digite o nome da espécie."
-        );
-
+        alert("Digite o nome da espécie.");
         return;
-
     }
+
+    const especies =
+    await buscarEspecies();
 
     const existe =
     especies.some(
@@ -53,27 +41,41 @@ function cadastrarEspecie(){
     );
 
     if(existe){
-
-        alert(
-            "Essa espécie já existe."
-        );
-
+        alert("Essa espécie já existe.");
         return;
-
     }
 
-    especies.push({
-
-        nome: nome
-
+    await addDoc(colecaoEspecies, {
+        nome: nome,
+        criadoEm: new Date().toISOString()
     });
-
-    salvarDados();
-
-    renderizarEspecies();
 
     campo.value = "";
 
+    carregarEspecies();
+};
+
+/*
+=========================
+BUSCAR ESPÉCIES
+=========================
+*/
+
+async function buscarEspecies(){
+
+    const snapshot =
+    await getDocs(colecaoEspecies);
+
+    const especies = [];
+
+    snapshot.forEach(documento => {
+        especies.push({
+            id: documento.id,
+            ...documento.data()
+        });
+    });
+
+    return especies;
 }
 
 /*
@@ -82,13 +84,10 @@ EDITAR
 =========================
 */
 
-function editarEspecie(index){
+window.editarEspecie = async function(id, nomeAtual){
 
     const novoNome =
-    prompt(
-        "Editar espécie:",
-        especies[index].nome
-    );
+    prompt("Editar espécie:", nomeAtual);
 
     if(!novoNome) return;
 
@@ -96,43 +95,36 @@ function editarEspecie(index){
     novoNome.trim();
 
     if(nome === ""){
-
-        alert(
-            "Nome inválido."
-        );
-
+        alert("Nome inválido.");
         return;
-
     }
+
+    const especies =
+    await buscarEspecies();
 
     const duplicada =
     especies.some(
-        (e,i)=>
-
-        i !== index &&
-
-        e.nome.toLowerCase()
+        especie =>
+        especie.id !== id &&
+        especie.nome.toLowerCase()
         === nome.toLowerCase()
     );
 
     if(duplicada){
-
-        alert(
-            "Já existe uma espécie com esse nome."
-        );
-
+        alert("Já existe uma espécie com esse nome.");
         return;
-
     }
 
-    especies[index].nome =
-    nome;
+    await updateDoc(
+        doc(db, "especies", id),
+        {
+            nome: nome,
+            atualizadoEm: new Date().toISOString()
+        }
+    );
 
-    salvarDados();
-
-    renderizarEspecies();
-
-}
+    carregarEspecies();
+};
 
 /*
 =========================
@@ -140,22 +132,19 @@ EXCLUIR
 =========================
 */
 
-function excluirEspecie(index){
+window.excluirEspecie = async function(id){
 
     const confirmar =
-    confirm(
-        "Deseja excluir esta espécie?"
-    );
+    confirm("Deseja excluir esta espécie?");
 
     if(!confirmar) return;
 
-    especies.splice(index,1);
+    await deleteDoc(
+        doc(db, "especies", id)
+    );
 
-    salvarDados();
-
-    renderizarEspecies();
-
-}
+    carregarEspecies();
+};
 
 /*
 =========================
@@ -163,56 +152,51 @@ LISTAR
 =========================
 */
 
-function renderizarEspecies(){
+async function carregarEspecies(){
 
     const lista =
-    document.getElementById(
-        "listaEspecies"
-    );
+    document.getElementById("listaEspecies");
 
     lista.innerHTML = "";
 
-    especies.forEach(
-        (especie,index)=>{
+    const especies =
+    await buscarEspecies();
+
+    if(especies.length === 0){
+        lista.innerHTML = `
+            <tr>
+                <td colspan="3">
+                    Nenhuma espécie cadastrada.
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    especies.forEach((especie,index)=>{
 
         lista.innerHTML += `
+            <tr>
+                <td>${index + 1}</td>
 
-        <tr>
+                <td>🌱 ${especie.nome}</td>
 
-            <td>
-                ${index + 1}
-            </td>
+                <td>
+                    <button
+                        class="btn-editar"
+                        onclick="editarEspecie('${especie.id}', '${especie.nome}')">
+                        Editar
+                    </button>
 
-            <td>
-                🌱 ${especie.nome}
-            </td>
-
-            <td>
-
-                <button
-                    class="btn-editar"
-                    onclick="editarEspecie(${index})">
-
-                    Editar
-
-                </button>
-
-                <button
-                    class="btn-excluir"
-                    onclick="excluirEspecie(${index})">
-
-                    Excluir
-
-                </button>
-
-            </td>
-
-        </tr>
-
+                    <button
+                        class="btn-excluir"
+                        onclick="excluirEspecie('${especie.id}')">
+                        Excluir
+                    </button>
+                </td>
+            </tr>
         `;
-
     });
-
 }
 
 /*
@@ -221,4 +205,4 @@ INICIAR
 =========================
 */
 
-renderizarEspecies();
+carregarEspecies();

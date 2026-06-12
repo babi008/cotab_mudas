@@ -1,3 +1,11 @@
+import { db } from "./firebase.js";
+
+import {
+    collection,
+    getDocs,
+    addDoc
+} from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+
 function formatarDataBR(dataISO){
     if(!dataISO) return "-";
 
@@ -5,15 +13,36 @@ function formatarDataBR(dataISO){
     return `${partes[2]}/${partes[1]}/${partes[0]}`;
 }
 
-const historico =
-JSON.parse(localStorage.getItem("historicoDashboard")) || [];
-
 const select =
 document.getElementById("selectLevantamento");
 
-function carregarLevantamentos(){
+let historico = [];
+
+/*
+=========================
+CARREGAR LEVANTAMENTOS
+=========================
+*/
+
+async function carregarLevantamentos(){
 
     select.innerHTML = "";
+
+    const snapshot =
+    await getDocs(
+        collection(db, "historicoDashboard")
+    );
+
+    historico = [];
+
+    snapshot.forEach(documento => {
+
+        historico.push({
+            id: documento.id,
+            ...documento.data()
+        });
+
+    });
 
     if(historico.length === 0){
         select.innerHTML = `
@@ -38,7 +67,13 @@ function carregarLevantamentos(){
     });
 }
 
-function gerarPDF(){
+/*
+=========================
+GERAR PDF
+=========================
+*/
+
+window.gerarPDF = async function(){
 
     const indice = select.value;
 
@@ -92,35 +127,50 @@ function gerarPDF(){
         body: dadosTabela
     });
 
-    const saidas =
-    JSON.parse(
-        localStorage.getItem("saidas")
-    ) || [];
+    /*
+    =========================
+    SAÍDAS DO FIREBASE
+    =========================
+    */
+
+    const saidasSnapshot =
+    await getDocs(
+        collection(db, "saidas")
+    );
+
+    const saidas = [];
+
+    saidasSnapshot.forEach(documento => {
+        saidas.push({
+            id: documento.id,
+            ...documento.data()
+        });
+    });
 
     const mesAnoRelatorio =
     registro.dataRegistroISO.slice(0, 7);
 
     const saidasDoMes =
-saidas.filter(item => {
+    saidas.filter(item => {
 
-    if(!item.dataISO){
-        return false;
-    }
+        if(!item.dataISO){
+            return false;
+        }
 
-    return item.dataISO.slice(0,7)
-    === mesAnoRelatorio;
+        return item.dataISO.slice(0,7)
+        === mesAnoRelatorio;
 
-});
+    });
 
     const dadosSaida =
-saidasDoMes.map(item => [
-    item.data || "-",
-    item.especie || "-",
-    item.quantidade || 0,
-    item.motivo || "-",
-    item.destino || "-",
-    item.observacao || "-"
-]);
+    saidasDoMes.map(item => [
+        item.data || "-",
+        item.especie || "-",
+        item.quantidade || 0,
+        item.motivo || "-",
+        item.destino || "-",
+        item.observacao || "-"
+    ]);
 
     let yFinal =
     doc.lastAutoTable.finalY + 15;
@@ -159,13 +209,14 @@ saidasDoMes.map(item => [
     });
 
     const totalSaida =
-saidasDoMes.reduce(
-    (soma,item)=>
-    soma + Number(item.quantidade),
-    0
-);
+    saidasDoMes.reduce(
+        (soma,item)=>
+        soma + Number(item.quantidade),
+        0
+    );
+
     const totalAposRetirada =
-registro.totalMudas - totalSaida;
+    registro.totalMudas - totalSaida;
 
     const yResumo =
     doc.lastAutoTable.finalY + 15;
@@ -181,25 +232,55 @@ registro.totalMudas - totalSaida;
         14,
         yResumo + 8
     );
+
     doc.text(
-    `Total Após Retiradas: ${totalAposRetirada}`,
-    14,
-    yResumo + 16
-);
+        `Total Após Retiradas: ${totalAposRetirada}`,
+        14,
+        yResumo + 16
+    );
 
-    let totalRelatorio =
-    Number(localStorage.getItem("relatorioGerados")) || 0;
+    /*
+    =========================
+    REGISTRA RELATÓRIO GERADO
+    =========================
+    */
 
-    totalRelatorio++;
+    const agora =
+    new Date();
 
-    localStorage.setItem(
-        "relatorioGerados",
-        totalRelatorio
+    await addDoc(
+        collection(db, "relatoriosGerados"),
+        {
+            levantamento:
+            registro.dataAtualizacao,
+
+            totalMudas:
+            registro.totalMudas,
+
+            totalSaidas:
+            totalSaida,
+
+            totalAposRetirada:
+            totalAposRetirada,
+
+            dataGeracao:
+            agora.toLocaleDateString("pt-BR"),
+
+            dataISO:
+            agora.toISOString()
+        }
     );
 
     doc.save(
         `Relatorio_${registro.dataAtualizacao}.pdf`
     );
-}
+
+};
+
+/*
+=========================
+INICIAR
+=========================
+*/
 
 carregarLevantamentos();
