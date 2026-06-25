@@ -9,6 +9,10 @@ import {
 function formatarDataBR(dataISO){
     if(!dataISO) return "-";
 
+    if(dataISO.includes("/")){
+        return dataISO;
+    }
+
     const partes = dataISO.split("-");
     return `${partes[2]}/${partes[1]}/${partes[0]}`;
 }
@@ -75,12 +79,19 @@ GERAR PDF
 
 window.gerarPDF = async function(){
 
+    await carregarLevantamentos();
+
     const indice = select.value;
 
     const registro = historico[indice];
 
     if(!registro){
         alert("Selecione um levantamento válido.");
+        return;
+    }
+
+    if(!registro.especies || registro.especies.length === 0){
+        alert("Este levantamento não possui espécies registradas.");
         return;
     }
 
@@ -148,7 +159,11 @@ window.gerarPDF = async function(){
     });
 
     const mesAnoRelatorio =
-    registro.dataRegistroISO.slice(0, 7);
+    (
+        registro.dataRegistroISO ||
+        registro.editadoEm ||
+        new Date().toISOString()
+    ).slice(0, 7);
 
     const saidasDoMes =
     saidas.filter(item => {
@@ -211,18 +226,18 @@ window.gerarPDF = async function(){
     const totalSaida =
     saidasDoMes.reduce(
         (soma,item)=>
-        soma + Number(item.quantidade),
+        soma + Number(item.quantidade || 0),
         0
     );
 
     const totalAposRetirada =
-    registro.totalMudas - totalSaida;
+    Number(registro.totalMudas || 0) - totalSaida;
 
     const yResumo =
     doc.lastAutoTable.finalY + 15;
 
     doc.text(
-        `Total Geral de Mudas: ${registro.totalMudas}`,
+        `Total Geral de Mudas: ${registro.totalMudas || 0}`,
         14,
         yResumo
     );
@@ -255,7 +270,7 @@ window.gerarPDF = async function(){
             registro.dataAtualizacao,
 
             totalMudas:
-            registro.totalMudas,
+            registro.totalMudas || 0,
 
             totalSaidas:
             totalSaida,

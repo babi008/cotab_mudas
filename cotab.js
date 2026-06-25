@@ -24,7 +24,65 @@ CARREGAR DASHBOARD
 
 async function carregarDashboard(){
 
-    // ESPÉCIES
+    const relatoriosSnapshot =
+    await getDocs(
+        collection(db, "relatoriosGerados")
+    );
+
+    document.getElementById("relatorio").innerHTML =
+    relatoriosSnapshot.size;
+
+    const historicoSnapshot =
+    await getDocs(
+        collection(db, "historicoDashboard")
+    );
+
+    let historicos = [];
+
+    historicoSnapshot.forEach(documento => {
+
+        historicos.push({
+            id: documento.id,
+            ...documento.data()
+        });
+
+    });
+
+    if(historicos.length > 0){
+
+        historicos.sort((a,b)=>{
+
+            const dataA = new Date(
+                a.editadoEm ||
+                a.dataRegistroISO ||
+                0
+            );
+
+            const dataB = new Date(
+                b.editadoEm ||
+                b.dataRegistroISO ||
+                0
+            );
+
+            return dataB - dataA;
+
+        });
+
+        const ultimo =
+        historicos[0];
+
+        document.getElementById("totalMudas").innerHTML =
+        ultimo.totalMudas || 0;
+
+        document.getElementById("totalEspecies").innerHTML =
+        ultimo.totalEspecies || 0;
+
+        document.getElementById("ultimaAtualizacao").innerHTML =
+        ultimo.dataAtualizacao || "-";
+
+        return;
+    }
+
     const especiesSnapshot =
     await getDocs(
         collection(db, "especies")
@@ -33,16 +91,12 @@ async function carregarDashboard(){
     document.getElementById("totalEspecies").innerHTML =
     especiesSnapshot.size;
 
-    // CONTAGENS
     const contagensSnapshot =
     await getDocs(
         collection(db, "contagens")
     );
 
-    let contagens = [];
-
     let totalContado = 0;
-
     let ultimaData = "";
 
     contagensSnapshot.forEach(documento => {
@@ -50,20 +104,14 @@ async function carregarDashboard(){
         const contagem =
         documento.data();
 
-        contagens.push({
-            id: documento.id,
-            ...contagem
-        });
-
         totalContado +=
-        Number(contagem.total);
+        Number(contagem.total || 0);
 
         ultimaData =
         contagem.data || ultimaData;
 
     });
 
-    // SAÍDAS
     const saidasSnapshot =
     await getDocs(
         collection(db, "saidas")
@@ -77,7 +125,7 @@ async function carregarDashboard(){
         documento.data();
 
         totalSaidas +=
-        Number(saida.quantidade);
+        Number(saida.quantidade || 0);
 
     });
 
@@ -93,15 +141,6 @@ async function carregarDashboard(){
         ultimaData;
 
     }
-
-    // RELATÓRIOS GERADOS
-    const relatoriosSnapshot =
-    await getDocs(
-        collection(db, "relatoriosGerados")
-    );
-
-    document.getElementById("relatorio").innerHTML =
-    relatoriosSnapshot.size;
 }
 
 /*
@@ -119,7 +158,6 @@ window.registrarLevantamento = async function(){
     );
 
     let contagens = [];
-
     let totalMudas = 0;
 
     contagensSnapshot.forEach(documento => {
@@ -133,7 +171,7 @@ window.registrarLevantamento = async function(){
         });
 
         totalMudas +=
-        Number(contagem.total);
+        Number(contagem.total || 0);
 
     });
 
@@ -202,6 +240,9 @@ window.registrarLevantamento = async function(){
         ),
 
         dataRegistroISO:
+        hoje.toISOString(),
+
+        editadoEm:
         hoje.toISOString(),
 
         totalMudas,
