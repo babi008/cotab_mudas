@@ -42,7 +42,68 @@ async function carregarDashboard(){
 
     /*
     =========================
-    CONTAGENS ATUAIS
+    HISTÓRICO EDITADO
+    =========================
+    */
+
+    const historicoSnapshot =
+    await getDocs(
+        collection(db, "historicoDashboard")
+    );
+
+    let historicosEditados = [];
+
+    historicoSnapshot.forEach(documento => {
+
+        const item = documento.data();
+
+        if(item.usarNoDashboard === true){
+
+            historicosEditados.push({
+                id: documento.id,
+                ...item
+            });
+
+        }
+
+    });
+
+    if(historicosEditados.length > 0){
+
+        historicosEditados.sort((a,b)=>{
+
+            const dataA = new Date(
+                a.editadoEm ||
+                a.dataRegistroISO ||
+                0
+            );
+
+            const dataB = new Date(
+                b.editadoEm ||
+                b.dataRegistroISO ||
+                0
+            );
+
+            return dataB - dataA;
+
+        });
+
+        const ultimoEditado =
+        historicosEditados[0];
+
+        document.getElementById("totalMudas").innerHTML =
+        ultimoEditado.totalMudas || 0;
+
+        document.getElementById("ultimaAtualizacao").innerHTML =
+        ultimoEditado.dataAtualizacao || "-";
+
+        return;
+    }
+
+    /*
+    =========================
+    SE NÃO HOUVER HISTÓRICO EDITADO,
+    USA CONTAGENS ATUAIS
     =========================
     */
 
@@ -53,7 +114,6 @@ async function carregarDashboard(){
 
     let totalContado = 0;
     let ultimaData = "";
-    let ultimaContagemISO = "";
 
     contagensSnapshot.forEach(documento => {
 
@@ -66,18 +126,7 @@ async function carregarDashboard(){
         ultimaData =
         contagem.data || ultimaData;
 
-        if(contagem.criadoEm || contagem.dataISO){
-            ultimaContagemISO =
-            contagem.criadoEm || contagem.dataISO;
-        }
-
     });
-
-    /*
-    =========================
-    SAÍDAS
-    =========================
-    */
 
     const saidasSnapshot =
     await getDocs(
@@ -98,83 +147,6 @@ async function carregarDashboard(){
 
     const totalContagensAtual =
     totalContado - totalSaidas;
-
-    /*
-    =========================
-    HISTÓRICO EDITADO
-    =========================
-    */
-
-    const historicoSnapshot =
-await getDocs(collection(db, "historicoDashboard"));
-
-let historicosEditados = [];
-
-historicoSnapshot.forEach(documento => {
-    const item = documento.data();
-
-    if(item.usarNoDashboard === true){
-        historicosEditados.push({
-            id: documento.id,
-            ...item
-        });
-    }
-});
-
-if(historicosEditados.length > 0){
-
-    historicosEditados.sort((a,b)=>{
-        const dataA = new Date(a.editadoEm || a.dataRegistroISO || 0);
-        const dataB = new Date(b.editadoEm || b.dataRegistroISO || 0);
-        return dataB - dataA;
-    });
-
-    const ultimoEditado = historicosEditados[0];
-
-    document.getElementById("totalMudas").innerHTML =
-    ultimoEditado.totalMudas || 0;
-
-    document.getElementById("ultimaAtualizacao").innerHTML =
-    ultimoEditado.dataAtualizacao || "-";
-
-    return;
-}
-
-    const ultimoEditado =
-    historicosEditados[0];
-
-    /*
-    =========================
-    DECISÃO DO DASHBOARD
-    =========================
-    */
-
-    if(ultimoEditado){
-
-        const dataHistorico =
-        new Date(
-            ultimoEditado.editadoEm ||
-            ultimoEditado.dataRegistroISO ||
-            0
-        );
-
-        const dataContagem =
-        new Date(
-            ultimaContagemISO ||
-            0
-        );
-
-        if(dataHistorico >= dataContagem){
-
-            document.getElementById("totalMudas").innerHTML =
-            ultimoEditado.totalMudas || 0;
-
-            document.getElementById("ultimaAtualizacao").innerHTML =
-            ultimoEditado.dataAtualizacao || "-";
-
-            return;
-        }
-    }
 
     document.getElementById("totalMudas").innerHTML =
     totalContagensAtual;
@@ -292,7 +264,18 @@ window.registrarLevantamento = async function(){
 
     let levantamentoExistente = null;
 
+    let promisesResetDashboard = [];
+
     historicoSnapshot.forEach(documento => {
+
+        promisesResetDashboard.push(
+            updateDoc(
+                doc(db, "historicoDashboard", documento.id),
+                {
+                    usarNoDashboard: false
+                }
+            )
+        );
 
         const item =
         documento.data();
@@ -315,6 +298,8 @@ window.registrarLevantamento = async function(){
         }
 
     });
+
+    await Promise.all(promisesResetDashboard);
 
     const levantamento = {
 
