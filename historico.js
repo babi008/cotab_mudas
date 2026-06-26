@@ -355,12 +355,6 @@ window.salvarEdicaoEspecie = async function(indexLevantamento, indexEspecie){
     verDetalhes(indexLevantamento);
 };
 
-/*
-=========================
-EXCLUIR ESPÉCIE INDIVIDUAL
-=========================
-*/
-
 window.excluirEspecie = async function(indexLevantamento, indexEspecie){
 
     const confirmar = confirm(
@@ -372,6 +366,17 @@ window.excluirEspecie = async function(indexLevantamento, indexEspecie){
     }
 
     const registro = historico[indexLevantamento];
+
+    const especieRemovida =
+    registro.especies[indexEspecie];
+
+    const nomeExcluido =
+    especieRemovida.especie ||
+    especieRemovida.nome;
+
+    /*
+    REMOVE DO LEVANTAMENTO
+    */
 
     registro.especies.splice(indexEspecie, 1);
 
@@ -392,6 +397,45 @@ window.excluirEspecie = async function(indexLevantamento, indexEspecie){
         }
     );
 
+    /*
+    REMOVE TAMBÉM DAS CONTAGENS
+    PARA NÃO VOLTAR AO REGISTRAR NOVO LEVANTAMENTO
+    */
+
+    const contagensSnapshot =
+    await getDocs(
+        collection(db, "contagens")
+    );
+
+    let exclusoes = [];
+
+    contagensSnapshot.forEach(documento => {
+
+        const contagem =
+        documento.data();
+
+        const nomeContagem =
+        contagem.especie ||
+        contagem.nome;
+
+        if(nomeContagem === nomeExcluido){
+
+            exclusoes.push(
+                deleteDoc(
+                    doc(
+                        db,
+                        "contagens",
+                        documento.id
+                    )
+                )
+            );
+
+        }
+
+    });
+
+    await Promise.all(exclusoes);
+
     alert("Espécie excluída com sucesso!");
 
     await carregarHistorico();
@@ -406,7 +450,6 @@ window.excluirEspecie = async function(indexLevantamento, indexEspecie){
         verDetalhes(indexLevantamento);
     }
 };
-
 /*
 =========================
 EXCLUIR LEVANTAMENTO
