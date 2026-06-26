@@ -40,6 +40,12 @@ async function carregarDashboard(){
     document.getElementById("relatorio").innerHTML =
     relatoriosSnapshot.size;
 
+    /*
+    =========================
+    CONTAGENS ATUAIS
+    =========================
+    */
+
     const contagensSnapshot =
     await getDocs(
         collection(db, "contagens")
@@ -47,6 +53,7 @@ async function carregarDashboard(){
 
     let totalContado = 0;
     let ultimaData = "";
+    let ultimaContagemISO = "";
 
     contagensSnapshot.forEach(documento => {
 
@@ -59,7 +66,18 @@ async function carregarDashboard(){
         ultimaData =
         contagem.data || ultimaData;
 
+        if(contagem.criadoEm || contagem.dataISO){
+            ultimaContagemISO =
+            contagem.criadoEm || contagem.dataISO;
+        }
+
     });
+
+    /*
+    =========================
+    SAÍDAS
+    =========================
+    */
 
     const saidasSnapshot =
     await getDocs(
@@ -78,23 +96,91 @@ async function carregarDashboard(){
 
     });
 
-    const totalAtual =
+    const totalContagensAtual =
     totalContado - totalSaidas;
 
-    document.getElementById("totalMudas").innerHTML =
-    totalAtual;
+    /*
+    =========================
+    HISTÓRICO EDITADO
+    =========================
+    */
 
-    if(ultimaData){
+    const historicoSnapshot =
+await getDocs(collection(db, "historicoDashboard"));
 
-        document.getElementById("ultimaAtualizacao").innerHTML =
-        ultimaData;
+let historicosEditados = [];
 
-    }else{
+historicoSnapshot.forEach(documento => {
+    const item = documento.data();
 
-        document.getElementById("ultimaAtualizacao").innerHTML =
-        hoje.toLocaleDateString("pt-BR");
-
+    if(item.usarNoDashboard === true){
+        historicosEditados.push({
+            id: documento.id,
+            ...item
+        });
     }
+});
+
+if(historicosEditados.length > 0){
+
+    historicosEditados.sort((a,b)=>{
+        const dataA = new Date(a.editadoEm || a.dataRegistroISO || 0);
+        const dataB = new Date(b.editadoEm || b.dataRegistroISO || 0);
+        return dataB - dataA;
+    });
+
+    const ultimoEditado = historicosEditados[0];
+
+    document.getElementById("totalMudas").innerHTML =
+    ultimoEditado.totalMudas || 0;
+
+    document.getElementById("ultimaAtualizacao").innerHTML =
+    ultimoEditado.dataAtualizacao || "-";
+
+    return;
+}
+
+    const ultimoEditado =
+    historicosEditados[0];
+
+    /*
+    =========================
+    DECISÃO DO DASHBOARD
+    =========================
+    */
+
+    if(ultimoEditado){
+
+        const dataHistorico =
+        new Date(
+            ultimoEditado.editadoEm ||
+            ultimoEditado.dataRegistroISO ||
+            0
+        );
+
+        const dataContagem =
+        new Date(
+            ultimaContagemISO ||
+            0
+        );
+
+        if(dataHistorico >= dataContagem){
+
+            document.getElementById("totalMudas").innerHTML =
+            ultimoEditado.totalMudas || 0;
+
+            document.getElementById("ultimaAtualizacao").innerHTML =
+            ultimoEditado.dataAtualizacao || "-";
+
+            return;
+        }
+    }
+
+    document.getElementById("totalMudas").innerHTML =
+    totalContagensAtual;
+
+    document.getElementById("ultimaAtualizacao").innerHTML =
+    ultimaData || hoje.toLocaleDateString("pt-BR");
 }
 
 /*
@@ -242,6 +328,9 @@ window.registrarLevantamento = async function(){
 
         editadoEm:
         hoje.toISOString(),
+
+        usarNoDashboard:
+        false,
 
         totalMudas:
         totalMudasAgrupado,

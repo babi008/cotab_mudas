@@ -343,7 +343,8 @@ window.salvarEdicaoEspecie = async function(indexLevantamento, indexEspecie){
             especies: registro.especies,
             totalMudas,
             totalEspecies,
-            editadoEm: new Date().toISOString()
+            editadoEm: new Date().toISOString(),
+            usarNoDashboard: true
         }
     );
 
@@ -386,7 +387,8 @@ window.excluirEspecie = async function(indexLevantamento, indexEspecie){
             especies: registro.especies,
             totalMudas,
             totalEspecies,
-            editadoEm: new Date().toISOString()
+            editadoEm: new Date().toISOString(),
+            usarNoDashboard: true
         }
     );
 
