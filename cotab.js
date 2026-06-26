@@ -14,7 +14,7 @@ document.getElementById("dataAtual").innerHTML =
     hoje.toLocaleDateString("pt-BR");
 
 document.getElementById("ultimaAtualizacao").innerHTML =
-    hoje.toLocaleDateString("pt-BR");
+    "Nenhum levantamento registrado";
 
 /*
 =========================
@@ -39,12 +39,6 @@ async function carregarDashboard(){
 
     document.getElementById("relatorio").innerHTML =
     relatoriosSnapshot.size;
-
-    /*
-    =========================
-    HISTÓRICO EDITADO
-    =========================
-    */
 
     const historicoSnapshot =
     await getDocs(
@@ -72,13 +66,15 @@ async function carregarDashboard(){
 
         historicosEditados.sort((a,b)=>{
 
-            const dataA = new Date(
+            const dataA =
+            new Date(
                 a.editadoEm ||
                 a.dataRegistroISO ||
                 0
             );
 
-            const dataB = new Date(
+            const dataB =
+            new Date(
                 b.editadoEm ||
                 b.dataRegistroISO ||
                 0
@@ -99,13 +95,6 @@ async function carregarDashboard(){
 
         return;
     }
-
-    /*
-    =========================
-    SE NÃO HOUVER HISTÓRICO EDITADO,
-    USA CONTAGENS ATUAIS
-    =========================
-    */
 
     const contagensSnapshot =
     await getDocs(
@@ -145,14 +134,15 @@ async function carregarDashboard(){
 
     });
 
-    const totalContagensAtual =
+    const totalAtual =
     totalContado - totalSaidas;
 
     document.getElementById("totalMudas").innerHTML =
-    totalContagensAtual;
+    totalAtual;
 
     document.getElementById("ultimaAtualizacao").innerHTML =
-    ultimaData || hoje.toLocaleDateString("pt-BR");
+        ultimaData || "Nenhum levantamento registrado";
+
 }
 
 /*
@@ -192,18 +182,13 @@ window.registrarLevantamento = async function(){
         return;
     }
 
-    /*
-    =========================
-    AGRUPAR ESPÉCIES LANÇADAS
-    =========================
-    */
-
     const especiesAgrupadas = [];
 
     contagens.forEach(contagem => {
 
         const nomeEspecie =
-        contagem.especie || contagem.nome;
+        contagem.especie ||
+        contagem.nome;
 
         let especieExistente =
         especiesAgrupadas.find(item =>
@@ -220,10 +205,12 @@ window.registrarLevantamento = async function(){
             especieExistente.total;
 
             if(contagem.fileiras){
+
                 especieExistente.fileiras = [
                     ...(especieExistente.fileiras || []),
                     ...contagem.fileiras
                 ];
+
             }
 
         }else{
@@ -285,17 +272,18 @@ window.registrarLevantamento = async function(){
             const data =
             new Date(item.dataRegistroISO);
 
-            if(
-                data.getMonth() === mesAtual &&
-                data.getFullYear() === anoAtual
-            ){
-                levantamentoExistente = {
-                    id: documento.id,
-                    ...item
-                };
-            }
-
+        if(
+            data.getDate() === hoje.getDate() &&
+            data.getMonth() === hoje.getMonth() &&
+            data.getFullYear() === hoje.getFullYear()
+        ){
+            levantamentoExistente = {
+                id: documento.id,
+                ...item
+            };
         }
+
+    }
 
     });
 
