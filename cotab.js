@@ -24,65 +24,6 @@ CARREGAR DASHBOARD
 
 async function carregarDashboard(){
 
-    const relatoriosSnapshot =
-    await getDocs(
-        collection(db, "relatoriosGerados")
-    );
-
-    document.getElementById("relatorio").innerHTML =
-    relatoriosSnapshot.size;
-
-    const historicoSnapshot =
-    await getDocs(
-        collection(db, "historicoDashboard")
-    );
-
-    let historicos = [];
-
-    historicoSnapshot.forEach(documento => {
-
-        historicos.push({
-            id: documento.id,
-            ...documento.data()
-        });
-
-    });
-
-    if(historicos.length > 0){
-
-        historicos.sort((a,b)=>{
-
-            const dataA = new Date(
-                a.editadoEm ||
-                a.dataRegistroISO ||
-                0
-            );
-
-            const dataB = new Date(
-                b.editadoEm ||
-                b.dataRegistroISO ||
-                0
-            );
-
-            return dataB - dataA;
-
-        });
-
-        const ultimo =
-        historicos[0];
-
-        document.getElementById("totalMudas").innerHTML =
-        ultimo.totalMudas || 0;
-
-        document.getElementById("totalEspecies").innerHTML =
-        ultimo.totalEspecies || 0;
-
-        document.getElementById("ultimaAtualizacao").innerHTML =
-        ultimo.dataAtualizacao || "-";
-
-        return;
-    }
-
     const especiesSnapshot =
     await getDocs(
         collection(db, "especies")
@@ -90,6 +31,14 @@ async function carregarDashboard(){
 
     document.getElementById("totalEspecies").innerHTML =
     especiesSnapshot.size;
+
+    const relatoriosSnapshot =
+    await getDocs(
+        collection(db, "relatoriosGerados")
+    );
+
+    document.getElementById("relatorio").innerHTML =
+    relatoriosSnapshot.size;
 
     const contagensSnapshot =
     await getDocs(
@@ -140,6 +89,11 @@ async function carregarDashboard(){
         document.getElementById("ultimaAtualizacao").innerHTML =
         ultimaData;
 
+    }else{
+
+        document.getElementById("ultimaAtualizacao").innerHTML =
+        hoje.toLocaleDateString("pt-BR");
+
     }
 }
 
@@ -158,7 +112,6 @@ window.registrarLevantamento = async function(){
     );
 
     let contagens = [];
-    let totalMudas = 0;
 
     contagensSnapshot.forEach(documento => {
 
@@ -169,9 +122,6 @@ window.registrarLevantamento = async function(){
             id: documento.id,
             ...contagem
         });
-
-        totalMudas +=
-        Number(contagem.total || 0);
 
     });
 
@@ -184,13 +134,61 @@ window.registrarLevantamento = async function(){
         return;
     }
 
-    const especiesSnapshot =
-    await getDocs(
-        collection(db, "especies")
-    );
+    /*
+    =========================
+    AGRUPAR ESPÉCIES LANÇADAS
+    =========================
+    */
+
+    const especiesAgrupadas = [];
+
+    contagens.forEach(contagem => {
+
+        const nomeEspecie =
+        contagem.especie || contagem.nome;
+
+        let especieExistente =
+        especiesAgrupadas.find(item =>
+            (item.especie || item.nome) === nomeEspecie
+        );
+
+        if(especieExistente){
+
+            especieExistente.total =
+            Number(especieExistente.total || 0) +
+            Number(contagem.total || 0);
+
+            especieExistente.quantidade =
+            especieExistente.total;
+
+            if(contagem.fileiras){
+                especieExistente.fileiras = [
+                    ...(especieExistente.fileiras || []),
+                    ...contagem.fileiras
+                ];
+            }
+
+        }else{
+
+            especiesAgrupadas.push({
+                ...contagem,
+                especie: nomeEspecie,
+                total: Number(contagem.total || 0),
+                quantidade: Number(contagem.total || 0),
+                fileiras: contagem.fileiras || []
+            });
+
+        }
+
+    });
 
     const totalEspecies =
-    especiesSnapshot.size;
+    especiesAgrupadas.length;
+
+    const totalMudasAgrupado =
+    especiesAgrupadas.reduce((soma,item)=>{
+        return soma + Number(item.total || 0);
+    },0);
 
     const hoje =
     new Date();
@@ -245,12 +243,13 @@ window.registrarLevantamento = async function(){
         editadoEm:
         hoje.toISOString(),
 
-        totalMudas,
+        totalMudas:
+        totalMudasAgrupado,
 
         totalEspecies,
 
         especies:
-        [...contagens]
+        [...especiesAgrupadas]
 
     };
 
@@ -283,7 +282,7 @@ window.registrarLevantamento = async function(){
     }
 
     mostrarSucessoLevantamento(
-        totalMudas,
+        totalMudasAgrupado,
         totalEspecies
     );
 
@@ -318,7 +317,7 @@ function mostrarSucessoLevantamento(
         </p>
 
         <p>
-            Total de espécies:
+            Total de espécies lançadas:
             <strong>${totalEspecies}</strong>
         </p>
 
