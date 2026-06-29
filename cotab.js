@@ -303,7 +303,7 @@ window.registrarLevantamento = async function(){
         hoje.toISOString(),
 
         usarNoDashboard:
-        false,
+        true,
 
         totalMudas:
         totalMudasAgrupado,
