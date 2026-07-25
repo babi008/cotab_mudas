@@ -95,6 +95,36 @@ async function carregarDashboard(){
 
     }
 
+    /*
+    =========================
+    CALCULAR SAÍDAS
+    =========================
+    */
+
+    const saidasSnapshot =
+    await getDocs(
+        collection(db, "saidas")
+    );
+
+    let totalSaidas = 0;
+
+    saidasSnapshot.forEach(documento => {
+
+        const saida =
+        documento.data();
+
+        totalSaidas +=
+        Number(saida.quantidade || 0);
+
+    });
+
+    /*
+    =========================
+    USAR ÚLTIMO LEVANTAMENTO
+    EDITADO NO DASHBOARD
+    =========================
+    */
+
     if(historicosEditados.length > 0){
 
         historicosEditados.sort((a,b)=>{
@@ -120,11 +150,25 @@ async function carregarDashboard(){
         const ultimoEditado =
         historicosEditados[0];
 
+        const totalAtual =
+        Math.max(
+            0,
+            Number(ultimoEditado.totalMudas || 0) -
+            totalSaidas
+        );
+
         document.getElementById("totalMudas").innerHTML =
-        ultimoEditado.totalMudas || 0;
+        totalAtual;
 
         return;
     }
+
+    /*
+    =========================
+    CASO NÃO EXISTA
+    LEVANTAMENTO EDITADO
+    =========================
+    */
 
     const contagensSnapshot =
     await getDocs(
@@ -143,29 +187,16 @@ async function carregarDashboard(){
 
     });
 
-    const saidasSnapshot =
-    await getDocs(
-        collection(db, "saidas")
-    );
-
-    let totalSaidas = 0;
-
-    saidasSnapshot.forEach(documento => {
-
-        const saida =
-        documento.data();
-
-        totalSaidas +=
-        Number(saida.quantidade || 0);
-
-    });
-
     const totalAtual =
-    totalContado - totalSaidas;
+    Math.max(
+        0,
+        totalContado - totalSaidas
+    );
 
     document.getElementById("totalMudas").innerHTML =
     totalAtual;
 }
+
 /*
 =========================
 REGISTRAR LEVANTAMENTO
@@ -293,18 +324,18 @@ window.registrarLevantamento = async function(){
             const data =
             new Date(item.dataRegistroISO);
 
-        if(
-            data.getDate() === hoje.getDate() &&
-            data.getMonth() === hoje.getMonth() &&
-            data.getFullYear() === hoje.getFullYear()
-        ){
-            levantamentoExistente = {
-                id: documento.id,
-                ...item
-            };
-        }
+            if(
+                data.getDate() === hoje.getDate() &&
+                data.getMonth() === hoje.getMonth() &&
+                data.getFullYear() === hoje.getFullYear()
+            ){
+                levantamentoExistente = {
+                    id: documento.id,
+                    ...item
+                };
+            }
 
-    }
+        }
 
     });
 
