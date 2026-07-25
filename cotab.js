@@ -45,11 +45,17 @@ async function carregarDashboard(){
         collection(db, "historicoDashboard")
     );
 
+    let todosHistoricos = [];
     let historicosEditados = [];
 
     historicoSnapshot.forEach(documento => {
 
         const item = documento.data();
+
+        todosHistoricos.push({
+            id: documento.id,
+            ...item
+        });
 
         if(item.usarNoDashboard === true){
 
@@ -61,6 +67,33 @@ async function carregarDashboard(){
         }
 
     });
+
+    if(todosHistoricos.length > 0){
+
+        todosHistoricos.sort((a,b)=>{
+
+            const dataA =
+            new Date(a.dataRegistroISO || 0);
+
+            const dataB =
+            new Date(b.dataRegistroISO || 0);
+
+            return dataB - dataA;
+
+        });
+
+        const ultimoLevantamento =
+        todosHistoricos[0];
+
+        document.getElementById("ultimaAtualizacao").innerHTML =
+        ultimoLevantamento.dataAtualizacao || "-";
+
+    }else{
+
+        document.getElementById("ultimaAtualizacao").innerHTML =
+        "Nenhum levantamento registrado";
+
+    }
 
     if(historicosEditados.length > 0){
 
@@ -90,9 +123,6 @@ async function carregarDashboard(){
         document.getElementById("totalMudas").innerHTML =
         ultimoEditado.totalMudas || 0;
 
-        document.getElementById("ultimaAtualizacao").innerHTML =
-        ultimoEditado.dataAtualizacao || "-";
-
         return;
     }
 
@@ -102,7 +132,6 @@ async function carregarDashboard(){
     );
 
     let totalContado = 0;
-    let ultimaData = "";
 
     contagensSnapshot.forEach(documento => {
 
@@ -111,9 +140,6 @@ async function carregarDashboard(){
 
         totalContado +=
         Number(contagem.total || 0);
-
-        ultimaData =
-        contagem.data || ultimaData;
 
     });
 
@@ -139,12 +165,7 @@ async function carregarDashboard(){
 
     document.getElementById("totalMudas").innerHTML =
     totalAtual;
-
-    document.getElementById("ultimaAtualizacao").innerHTML =
-        ultimaData || "Nenhum levantamento registrado";
-
 }
-
 /*
 =========================
 REGISTRAR LEVANTAMENTO
