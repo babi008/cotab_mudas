@@ -56,7 +56,12 @@ async function carregarLevantamentos(){
         `;
         return;
     }
+    historico.sort((a, b) => {
+    const dataA = a.dataRegistroISO || a.editadoEm || "";
+    const dataB = b.dataRegistroISO || b.editadoEm || "";
 
+    return dataB.localeCompare(dataA);
+});
     historico.forEach((item,index)=>{
 
         const option =
@@ -79,10 +84,7 @@ GERAR PDF
 
 window.gerarPDF = async function(){
 
-    await carregarLevantamentos();
-
-    const indice = select.value;
-
+    const indice = Number(select.value);
     const registro = historico[indice];
 
     if(!registro){
